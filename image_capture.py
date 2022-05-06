@@ -32,8 +32,7 @@ def process_image(image):
     return img
 
 
-def locate_portfolio_section(percentage):
-    print(percentage)
+def locate_portfolio_section(query_percentage):
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
     loc_coordinates_upleft = imagesearch("images/ganancia-actual-big-size-font.png")
     coordinates_percentage_area = set_coordinates_percentage_area(loc_coordinates_upleft)
@@ -42,5 +41,4 @@ def locate_portfolio_section(percentage):
     percentage_img = cv2.imread('images/screenshot.png')
     percentage_img = process_image(percentage_img)
     result = pytesseract.image_to_string(percentage_img, lang="eng")
-    percentage = int(re.search(r'[+ -]+\d+', result).group())
-    print(percentage)
+    percentage_in_screen = int(re.search(r'[+ -]+\d+', result).group())
