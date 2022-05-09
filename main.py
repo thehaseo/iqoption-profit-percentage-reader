@@ -26,12 +26,33 @@ class MainFrame(tk.Frame):
         self.config(padx=50, pady=20)
         vldt_ifnum_cmd = (self.register(self.validate_percentage_number), '%S')
         self.program_active = None  # Flag to check if the thread for image_capture is running
+        # LabelFrame to set route to tesseract program
+        self.tesseract_route = tk.LabelFrame(self, text="Cambiar ruta por defecto de tesseract:", pady=5, padx=5)
+        self.change_route_checkbox_control_var = tk.BooleanVar()
+        self.change_route_checkbox = tk.Checkbutton(
+            self.tesseract_route,
+            text="Cambiar:",
+            variable=self.change_route_checkbox_control_var, 
+            onvalue=True, 
+            offvalue=False,
+            command=self.enable_disable_change_route
+            )
+        self.entry_route = tk.Entry(self.tesseract_route, width=40)
+        
         self.percentage_limit_search = tk.LabelFrame(self, text="Introduzca porcentaje de ganancia deseado:", pady=5, padx=5)
         options_list = ["Mayor a", "Menor a"]  # List of options for OptionMenu
         self.value_option_menu = tk.StringVar(self.percentage_limit_search)
         self.bigger_less_than_option = tk.ttk.OptionMenu(self.percentage_limit_search, self.value_option_menu, options_list[0], *options_list)
         self.percentage_sign = tk.Label(self.percentage_limit_search, text="%")
-        self.percentage_limit = tk.Spinbox(self.percentage_limit_search, from_=-100, to=100, width=10, justify="center", validate="all", validatecommand=vldt_ifnum_cmd)
+        self.percentage_limit = tk.Spinbox(
+            self.percentage_limit_search, 
+            from_=-100, 
+            to=100, 
+            width=10, 
+            justify="center", 
+            validate="all", 
+            validatecommand=vldt_ifnum_cmd
+        )
         self.percentage_limit.insert("0", "0")
         self.start_button = tk.Button(
             self, 
@@ -47,17 +68,23 @@ class MainFrame(tk.Frame):
                                                         state='disabled', wrap='word')
         
         # Elements for the self frame
-        self.percentage_limit_search.grid(row=0, column=0)
-        self.start_button.grid(row=0, column=1, padx=10)
-        self.info_window.grid(row=1, column=0, columnspan=2, pady=10)
+        self.tesseract_route.grid(row=0, columnspan=2, pady=10)
+        self.percentage_limit_search.grid(row=1, column=0)
+        self.start_button.grid(row=1, column=1, padx=10)
+        self.info_window.grid(row=2, column=0, columnspan=2, pady=10)
+        
+        # Elements for tesseract route LabelFrame
+        self.change_route_checkbox.grid(row=0, column=0)
+        self.change_route_checkbox.deselect()
+        self.entry_route.grid(row=0, column=1)
+        self.entry_route.insert(0, r"C:\Program Files\Tesseract-OCR\tesseract")
+        self.entry_route.config(state="disabled")
 
         # Elements for percentage_limit_search LabelFrame
         self.bigger_less_than_option.grid(row=0, column=0, padx=5)
         self.percentage_limit.grid(row=0, column=1, padx=5)
         self.percentage_sign.grid(row=0, column=2)
         
-        
-
     def validate_percentage_number(self, new_value):
         """Check the value inserted in percentage spinbox are only numbers"""
         match = re.match(r'[\d -]+', new_value)
@@ -68,6 +95,12 @@ class MainFrame(tk.Frame):
         else:
             return True
 
+    def enable_disable_change_route(self):
+        if self.change_route_checkbox_control_var.get():
+            self.entry_route.config(state="normal")
+        elif not self.change_route_checkbox_control_var.get():
+            self.entry_route.config(state="disabled")
+
     def start_program(self):
         if self.program_active is None:
             if not self.percentage_limit.get().lstrip("-").isdigit():
@@ -76,7 +109,7 @@ class MainFrame(tk.Frame):
                 return
             self.percentage_limit.config(state="disabled")
             self.bigger_less_than_option.configure(state="disabled")
-            self.program_active = DetectScreen(self.percentage_limit.get(), self.value_option_menu.get(), self.info_window)
+            self.program_active = DetectScreen(self, self.percentage_limit.get(), self.value_option_menu.get(), self.info_window, self.entry_route.get())
             self.program_active.start()
             self.info_window.insert_text("Iniciando, mantenga la app de Iqoption desplegada en pantalla...")
             self.start_button["bg"] = "#ff4949"
